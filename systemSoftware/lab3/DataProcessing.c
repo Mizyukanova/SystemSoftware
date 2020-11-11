@@ -1,6 +1,6 @@
 /* Функция обработки текста*/
 // Компиляция gcc -fPIC -c DataProcessing.c 
-// Упаковка в разделяемую (динамическую) библиотеку gcc  -shared -o libfsdyn.so DataProcessing.o
+// Упаковка в разделяемую (динамическую) библиотеку gcc -shared -o libfsdyn.so DataProcessing.o
 
 int DataProcessing(char *buffer, int nRead, int max)
 {

@@ -45,7 +45,7 @@ void server(int readfd, int writefd)
     int (*func)(char *buffer, int nRead, int max);  // переменная для хранения адреса функции
     
 	/* загрузка библиотеки */
-    ext_library = dlopen("/home/user/AA77/СПО/ЛР4/libfsdyn.so",RTLD_LAZY);
+    ext_library = dlopen("/home/user/AA77/systemSoftware/lab4/libfsdyn.so",RTLD_LAZY);
     if (!ext_library)
     {
         //если ошибка, то вывести ее на экран

@@ -1,6 +1,6 @@
 // Многозадачное программирование в Linux
 // Входные параметры: по три аргумента для обработки
-// Компиляция и компановка gcc parent -o parent
+// Компиляция и компановка gcc parent.c -o parent
 // Запуск ./parent inputFile.txt outputFile.txt 4 inputFile1.txt outputFile1.txt 3
 
 #include <sys/types.h>

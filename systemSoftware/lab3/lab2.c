@@ -1,5 +1,5 @@
 // Обработка текстового файла inputFile средствами системых вызовов Linux, сама обработка находится в библиотеке libfsdyn.so
-//Компиляция gcc ./lab2.c -o resultdyn -ldl
+//Компиляция gcc -c lab2.c,  gcc lab2.o -L. -lfsdyn -o resultdyn -ldl
 
 #include <unistd.h>
 #include <sys/stat.h>
