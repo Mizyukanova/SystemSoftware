@@ -51,7 +51,7 @@ void server(int first, int second)
 		    char buf[BUF_SIZE];
 
 		    // Загрузка библиотеки
-		    ext_library = dlopen("/home/user/AA77/СПО/ЛР5/libfsdyn.so",RTLD_LAZY);
+		    ext_library = dlopen("/home/user/AA77/systemSoftware/lab5/libfsdyn.so",RTLD_LAZY);
 		    if (!ext_library)
 		    {
 		        //если ошибка, то вывести ее на экран
