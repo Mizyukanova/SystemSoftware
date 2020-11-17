@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
   // проверка на количество аргументов в командной строке 
   if ( argc < 4 || (argc-1)%3 != 0 ) 
   {
-      perror("Usage: file textfile1 textfile2 ...\n");
+      printf("Usage: file textfile1 textfile2 ...\n");
       exit(-1);
   }
 
@@ -49,21 +49,21 @@ int main(int argc, char *argv[])
     strcpy(pathname,arg1); // имя i-го входного файла
     if( (key[i]=ftok(pathname,0)) < 0 )
     {
-      perror("ftok: can't generate keys\n");
-      exit(-2);
+      perror("ftok: can't generate key");
+      break;
     }
 
     /* создание нового сегмента памяти и семафора для i-й тройки */
     oflag = 0666 | IPC_CREAT; 
     if( (shmid[i]=shmget(key[i], 256, oflag)) < 0 )
     {
-      perror("shmget: can't get shmid\n");
-      exit(-3);
+      perror("shmget: can't get shmid");
+      break;
     }
     if( (semid[i]=semget(key[i], 1, oflag)) < 0 )
     {
-      perror("semget: can't get semid\n");
-      exit(-4);
+      perror("semget: can't get semid");
+      break;
     }
 
     /* инициализация семафора */
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     if (semop(semid[i],&lock_res,1) == -1)
     {
       perror("semop: lock_res");
-      exit(-5);
+      break;
     }
     
     /* подключение сегмента разделяемой памяти */
@@ -95,17 +95,14 @@ int main(int argc, char *argv[])
     {
       /* child */
       server(semid[i],shmid[i]);
-      printf("server all\n");
       exit(0);
     }
     else if (pid[i] < 0)
     {
-      perror("fork: can't fork.\n");
-      exit(-3);
+      perror("fork: can't fork");
+      break;
     }
     /* parent */
-    printf("PID %d\n", pid[i]);
-    
   }
 
   sleep(1);
@@ -114,27 +111,28 @@ int main(int argc, char *argv[])
   int status;
   for (i = 0; i < countInput; i+=1) 
   { 
-    printf("mainwait\n");
     status=waitpid(pid[i],NULL,0);
     if (pid[i] == status) 
     {
-      printf("waitPID %d\n", pid[i]);
       /* прием результата обработки сервера*/
       if( semop(semid[i],&lock_res,1) == -1)
       {
         perror("semop: lock_res");
+        exit(-7);
       }
       
-      
+      /* подключение сегмента разделяемой памяти */      
       *(ptr+i)=shmat(shmid[i], NULL,0);
 
-      printf("Resv from server %d\n", pid[i]);
-      
       strcpy(buff, *(ptr+i));
-      printf("File %s done, result=%s\n",argv[3*i+1],buff);
+      printf("%s",buff);
+      
+      /* отключение сегмента памяти */
       shmdt(*(ptr+i));
+      /* снимается блокировка ресурса */
       semop(semid[i],&rel_res,1);
       
+      /* удаление семафора и сегмента разделяемой памяти*/
       shmctl(shmid[i],IPC_RMID, NULL);
       semctl(semid[i],0,IPC_RMID);
 

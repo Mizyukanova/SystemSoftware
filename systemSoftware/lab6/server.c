@@ -16,14 +16,14 @@ void server(int semid, int shmid)
 {
 	
 	/* получение строки с тройкой аргументов из очереди */
-	
 	if( semop(semid,&lock_res,1) == -1)
     {
       perror("semop: lock_res");
+      exit(-1);
     }
-	
-	char* ptr=shmat(shmid, NULL,0);
-	printf("recv from parent: %s\n", ptr);
+
+	/* подключение сегмента разделяемой памяти */      
+    char* ptr=shmat(shmid, NULL,0);
 	char* ptr1=ptr;
 
 	/* разбиение строки на три аргумента */
@@ -39,9 +39,6 @@ void server(int semid, int shmid)
 	    i=i+1;
 		tok = strtok(NULL," ");
 	}
-	printf("arg1%s\n", arg[1]);
-	printf("arg2%s\n", arg[2]);
-	printf("arg3%s\n", arg[3]);
 
 	int max = atoi(arg[3]); //  количество замен
 
@@ -60,8 +57,9 @@ void server(int semid, int shmid)
     if (!ext_library)
     {
         //если ошибка, то вывести ее на экран
-        fprintf(stderr,"dlopen() error: %s\n", dlerror());
         result=-1;
+        perror("dlopen: library can't load");
+        exit(-1);
     };
     printf("Library loaded!\n");
 
@@ -74,7 +72,8 @@ void server(int semid, int shmid)
     if (inputFd == -1)
     {
         printf ("Error opening file %s\n", arg[1]) ; 
-        result=-2;
+        result=-1;
+        exit(-1);
     }
     openFlags = O_CREAT | O_WRONLY | O_TRUNC;
     filePerms = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; /* rw - rw - rw - */
@@ -82,11 +81,11 @@ void server(int semid, int shmid)
     if (outputFd == -1)
     {
         printf ("Error opening file %s\n ", arg[2]) ; 
-        result=-3;
+        result=-1;
+        exit(-1);
     }
 
     memset(buf,0,BUF_SIZE);
-    printf("here\n");
     /* Перемещение данных до достижения конца файла ввода или возникновения ошибки */
     while ((numRead = read (inputFd, buf, BUF_SIZE)) > 0)
     {
@@ -94,36 +93,36 @@ void server(int semid, int shmid)
         if (write (outputFd, buf, numRead) != numRead)
         {
             printf ("couldn't write whole buffer\n ");
-            result=-4;
+            result=-1;
+            exit(-1);
         }
         if (numRead == -1)
         {
             printf ("read error\n "); 
-            result=-5;
+            result=-1;
+            exit(-1);
         }
         if (close (inputFd ) == -1 )
         {
             printf ("close input error\n"); 
-            result=-6;
+            result=-1;
+            exit(-1);
         }
         if (close (outputFd ) == -1 )
         {
             printf ("close output error\n"); 
-            result=-7;
+            result=-1;
+            exit(-1);
         }
     }
- 	printf("result %d\n",result);
 	
-	/* заполнение структуры с результатом обработки входного файла*/
-	sprintf(buf,"%d\n", result);
-	int len=strlen(buf);
-    buf[len+1]='\0';
+	/* заполнение массива с результатом обработки входного файла*/
+	sprintf(buf,"File %s done, result=%d\n", arg[1], result);
     strcpy(ptr1,buf);
-	shmdt(ptr);
-	semop(semid,&rel_res,1);
 	
-	
-	//exit(result);	
-	printf("gere1\n");
+	/* отключение сегмента памяти */
+    shmdt(ptr);
+	/* снимается блокировка ресурса */
+    semop(semid,&rel_res,1);
 	
 }
